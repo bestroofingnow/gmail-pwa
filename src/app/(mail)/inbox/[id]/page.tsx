@@ -14,6 +14,7 @@ export default function EmailPage({ params }: { params: Promise<{ id: string }> 
   const { message, isLoading, error } = useMessage(id);
   const [showCompose, setShowCompose] = useState(false);
   const [composeMode, setComposeMode] = useState<"reply" | "forward" | null>(null);
+  const [aiGeneratedReply, setAiGeneratedReply] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -38,7 +39,8 @@ export default function EmailPage({ params }: { params: Promise<{ id: string }> 
     );
   }
 
-  const handleReply = () => {
+  const handleReply = (prefillBody?: string) => {
+    setAiGeneratedReply(prefillBody || null);
     setComposeMode("reply");
     setShowCompose(true);
   };
@@ -77,7 +79,9 @@ export default function EmailPage({ params }: { params: Promise<{ id: string }> 
             defaultSubject={message.subject}
             defaultBody={
               composeMode === "reply"
-                ? `\n\n\n---------- Original Message ----------\nFrom: ${message.from}\nDate: ${message.date}\nSubject: ${message.subject}\n\n${message.body}`
+                ? aiGeneratedReply
+                  ? `${aiGeneratedReply}\n\n---------- Original Message ----------\nFrom: ${message.from}\nDate: ${message.date}\nSubject: ${message.subject}\n\n${message.body}`
+                  : `\n\n\n---------- Original Message ----------\nFrom: ${message.from}\nDate: ${message.date}\nSubject: ${message.subject}\n\n${message.body}`
                 : composeMode === "forward"
                 ? `\n\n\n---------- Forwarded Message ----------\nFrom: ${message.from}\nDate: ${message.date}\nSubject: ${message.subject}\nTo: ${message.to}\n\n${message.body}`
                 : ""
@@ -88,6 +92,7 @@ export default function EmailPage({ params }: { params: Promise<{ id: string }> 
             onClose={() => {
               setShowCompose(false);
               setComposeMode(null);
+              setAiGeneratedReply(null);
             }}
           />
         </div>

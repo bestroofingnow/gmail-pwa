@@ -4,10 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EmailMessage } from "@/types/gmail";
 import { formatDate, parseEmailAddress } from "@/lib/utils";
+import { AIAssistant } from "./AIAssistant";
 
 interface EmailDetailProps {
   email: EmailMessage;
-  onReply?: () => void;
+  onReply?: (prefillBody?: string) => void;
   onForward?: () => void;
 }
 
@@ -70,7 +71,7 @@ export function EmailDetail({ email, onReply, onForward }: EmailDetailProps) {
           <h1 className="text-xl font-semibold text-gray-900">{email.subject}</h1>
           <div className="flex items-center gap-2">
             <button
-              onClick={onReply}
+              onClick={() => onReply?.()}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               title="Reply"
             >
@@ -158,6 +159,14 @@ export function EmailDetail({ email, onReply, onForward }: EmailDetailProps) {
           </div>
         </div>
       )}
+
+      {/* AI Assistant */}
+      <div className="p-6 border-t border-gray-200">
+        <AIAssistant
+          email={email}
+          onUseReply={(reply) => onReply?.(reply)}
+        />
+      </div>
     </div>
   );
 }
