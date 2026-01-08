@@ -12,10 +12,24 @@ export const authOptions: NextAuthOptions = {
             "openid",
             "email",
             "profile",
+            // Gmail API scopes
             "https://www.googleapis.com/auth/gmail.readonly",
             "https://www.googleapis.com/auth/gmail.send",
             "https://www.googleapis.com/auth/gmail.modify",
             "https://www.googleapis.com/auth/gmail.labels",
+            // Google Calendar API scopes
+            "https://www.googleapis.com/auth/calendar",
+            "https://www.googleapis.com/auth/calendar.events",
+            // Google Drive API scopes
+            "https://www.googleapis.com/auth/drive",
+            "https://www.googleapis.com/auth/drive.file",
+            // Google Sheets API scopes
+            "https://www.googleapis.com/auth/spreadsheets",
+            // Google Docs API scopes
+            "https://www.googleapis.com/auth/documents",
+            // Google Forms API scopes
+            "https://www.googleapis.com/auth/forms.body",
+            "https://www.googleapis.com/auth/forms.responses.readonly",
           ].join(" "),
           access_type: "offline",
           prompt: "consent",

@@ -5,12 +5,20 @@ import { usePathname } from "next/navigation";
 import { useLabels } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
-const systemFolders = [
+const mailFolders = [
   { id: "INBOX", name: "Inbox", icon: "inbox", href: "/inbox" },
   { id: "SENT", name: "Sent", icon: "send", href: "/sent" },
   { id: "DRAFT", name: "Drafts", icon: "file", href: "/drafts" },
   { id: "TRASH", name: "Trash", icon: "trash", href: "/trash" },
   { id: "SPAM", name: "Spam", icon: "alert", href: "/spam" },
+];
+
+const workspaceApps = [
+  { id: "CALENDAR", name: "Calendar", icon: "calendar", href: "/calendar" },
+  { id: "DRIVE", name: "Drive", icon: "drive", href: "/drive" },
+  { id: "SHEETS", name: "Sheets", icon: "sheets", href: "/sheets" },
+  { id: "DOCS", name: "Docs", icon: "docs", href: "/docs" },
+  { id: "FORMS", name: "Forms", icon: "forms", href: "/forms" },
 ];
 
 const icons: Record<string, React.ReactNode> = {
@@ -44,6 +52,32 @@ const icons: Record<string, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
     </svg>
   ),
+  calendar: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  ),
+  drive: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+    </svg>
+  ),
+  sheets: (
+    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 3a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7zm-1 5a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" clipRule="evenodd" />
+    </svg>
+  ),
+  docs: (
+    <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 3a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+    </svg>
+  ),
+  forms: (
+    <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+      <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+      <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+    </svg>
+  ),
 };
 
 export function Sidebar() {
@@ -67,7 +101,13 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 px-2 space-y-1 overflow-y-auto">
-        {systemFolders.map((folder) => (
+        {/* Mail Section */}
+        <div className="pb-2 px-3">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            Mail
+          </span>
+        </div>
+        {mailFolders.map((folder) => (
           <Link
             key={folder.id}
             href={folder.href}
@@ -83,6 +123,29 @@ export function Sidebar() {
           </Link>
         ))}
 
+        {/* Workspace Apps Section */}
+        <div className="pt-4 pb-2 px-3">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            Workspace
+          </span>
+        </div>
+        {workspaceApps.map((app) => (
+          <Link
+            key={app.id}
+            href={app.href}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+              pathname === app.href
+                ? "bg-blue-50 text-blue-700"
+                : "text-gray-700 hover:bg-gray-100"
+            )}
+          >
+            {icons[app.icon]}
+            {app.name}
+          </Link>
+        ))}
+
+        {/* Labels Section */}
         {userLabels.length > 0 && (
           <>
             <div className="pt-4 pb-2 px-3">
