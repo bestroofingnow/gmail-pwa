@@ -1,13 +1,12 @@
 import { generateText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
-// Vercel AI Gateway with Groq provider
-const groq = createOpenAI({
-  baseURL: "https://api.groq.com/openai/v1",
-  apiKey: process.env.AI_GATEWAY_API_KEY,
+// Vercel AI Gateway with Google Gemini
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_AI_API_KEY,
 });
 
-const MODEL = "meta-llama/llama-4-maverick-17b-128e-instruct";
+const MODEL = "gemini-2.0-flash";
 
 export interface EmailContext {
   subject: string;
@@ -19,7 +18,7 @@ export interface EmailContext {
 
 export async function summarizeEmail(email: EmailContext): Promise<string> {
   const { text } = await generateText({
-    model: groq(MODEL),
+    model: google(MODEL),
     system: `You are an AI email assistant. Summarize emails concisely in 2-3 sentences, highlighting the key points and any action items. Be direct and professional.`,
     prompt: `Please summarize this email:
 
@@ -46,7 +45,7 @@ export async function generateReply(
   };
 
   const { text } = await generateText({
-    model: groq(MODEL),
+    model: google(MODEL),
     system: `You are an AI email assistant helping to draft email replies. Write replies that are ${toneDescriptions[tone]}.
 
 Rules:
@@ -76,7 +75,7 @@ export async function categorizeEmail(email: EmailContext): Promise<{
   actionSummary?: string;
 }> {
   const { text } = await generateText({
-    model: groq(MODEL),
+    model: google(MODEL),
     system: `You are an AI email assistant that categorizes emails. Analyze the email and return a JSON object with:
 - category: one of "work", "personal", "newsletter", "promotional", "social", "finance", "travel", "shopping", "updates", "other"
 - priority: "high", "medium", or "low" based on urgency and importance
@@ -116,7 +115,7 @@ export async function improveEmailDraft(
   instructions?: string
 ): Promise<string> {
   const { text } = await generateText({
-    model: groq(MODEL),
+    model: google(MODEL),
     system: `You are an AI email assistant that improves email drafts. Make the email clearer, more professional, and more effective while preserving the original intent and meaning.
 ${instructions ? `\nSpecific instructions: ${instructions}` : ""}
 
@@ -129,7 +128,7 @@ Return only the improved email text, no explanations.`,
 
 export async function extractActionItems(email: EmailContext): Promise<string[]> {
   const { text } = await generateText({
-    model: groq(MODEL),
+    model: google(MODEL),
     system: `You are an AI email assistant that extracts action items from emails. List any tasks, requests, deadlines, or follow-ups mentioned in the email.
 
 Return a JSON array of strings, each being a specific action item. If no action items, return an empty array [].
@@ -173,7 +172,7 @@ export async function suggestMeetingTime(
   reasoning: string;
 }> {
   const { text } = await generateText({
-    model: groq(MODEL),
+    model: google(MODEL),
     system: `You are an AI scheduling assistant. Given a meeting description, available time slots, and optional preferences, suggest the best time slot.
 
 Return a JSON object with:
@@ -216,7 +215,7 @@ export async function generateMeetingAgenda(
   meetingContext: CalendarContext
 ): Promise<string> {
   const { text } = await generateText({
-    model: groq(MODEL),
+    model: google(MODEL),
     system: `You are an AI meeting assistant. Generate a professional meeting agenda based on the meeting details provided.
 
 Include:
@@ -241,7 +240,7 @@ ${meetingContext.location ? `Location: ${meetingContext.location}` : ""}`,
 // Document AI Features
 export async function summarizeDocument(content: string): Promise<string> {
   const { text } = await generateText({
-    model: groq(MODEL),
+    model: google(MODEL),
     system: `You are an AI document assistant. Summarize the document content concisely, highlighting:
 - Main topics and themes
 - Key points and conclusions
@@ -263,7 +262,7 @@ export async function analyzeSpreadsheetData(
   question: string
 ): Promise<string> {
   const { text } = await generateText({
-    model: groq(MODEL),
+    model: google(MODEL),
     system: `You are an AI data analyst. Analyze the spreadsheet data and answer questions about it.
 
 Provide insights based on:
@@ -298,7 +297,7 @@ export async function generateFormQuestions(
   }[];
 }> {
   const { text } = await generateText({
-    model: groq(MODEL),
+    model: google(MODEL),
     system: `You are an AI form builder. Generate form questions based on the topic and purpose.
 
 Return a JSON object with:
@@ -346,7 +345,7 @@ export async function analyzeFormResponses(
   recommendations: string[];
 }> {
   const { text } = await generateText({
-    model: groq(MODEL),
+    model: google(MODEL),
     system: `You are an AI form response analyst. Analyze the form responses and provide:
 - A summary of the responses
 - Key insights and patterns
@@ -391,7 +390,7 @@ export async function suggestFileOrganization(
   fileAssignments: { fileName: string; suggestedFolder: string }[];
 }> {
   const { text } = await generateText({
-    model: groq(MODEL),
+    model: google(MODEL),
     system: `You are an AI file organization assistant. Analyze the list of files and suggest a folder structure.
 
 Return a JSON object with:
