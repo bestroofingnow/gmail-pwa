@@ -124,11 +124,11 @@ export function EmailDetail({ email, onReply, onForward }: EmailDetailProps) {
       <div className="p-6">
         {email.bodyHtml ? (
           <div
-            className="prose max-w-none"
+            className="prose max-w-none prose-p:text-black prose-li:text-black prose-td:text-black"
             dangerouslySetInnerHTML={{ __html: email.bodyHtml }}
           />
         ) : (
-          <pre className="whitespace-pre-wrap font-sans text-gray-700">
+          <pre className="whitespace-pre-wrap font-sans text-black">
             {email.body}
           </pre>
         )}

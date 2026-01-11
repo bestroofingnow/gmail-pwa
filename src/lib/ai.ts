@@ -437,3 +437,63 @@ ${files.slice(0, 50).map((f) => `- ${f.name} (${f.mimeType})`).join("\n")}`,
     };
   }
 }
+
+// Security AI Features
+export async function scanEmailSecurity(email: EmailContext): Promise<{
+  riskLevel: "safe" | "suspicious" | "dangerous";
+  riskScore: number;
+  threats: string[];
+  recommendations: string[];
+  summary: string;
+  shouldOpen: boolean;
+}> {
+  const text = await runWithFallback({
+    system: `You are an AI email security analyst. Analyze the email for potential threats like:
+- Phishing attempts (fake login pages, credential harvesting)
+- Scam emails (Nigerian prince, lottery wins, fake invoices)
+- Malware indicators (suspicious attachments, download links)
+- Spoofed sender addresses
+- Urgency tactics to pressure quick action
+- Suspicious links or domains
+- Requests for sensitive information
+- Impersonation of known companies or people
+
+Return a JSON object with:
+- riskLevel: "safe", "suspicious", or "dangerous"
+- riskScore: 0-100 (0 = completely safe, 100 = definitely malicious)
+- threats: Array of specific threats identified
+- recommendations: Array of safety recommendations
+- summary: 1-2 sentence plain English explanation for the user
+- shouldOpen: Boolean - whether it's safe to fully open this email
+
+Be thorough but avoid false positives. Legitimate marketing emails are not dangerous.
+Return ONLY valid JSON, no other text.`,
+    prompt: `Analyze this email for security threats:
+
+From: ${email.from}
+To: ${email.to}
+Subject: ${email.subject}
+Date: ${email.date}
+
+Body:
+${email.body}`,
+  });
+
+  try {
+    const content = text || "{}";
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    throw new Error("No valid JSON found");
+  } catch {
+    return {
+      riskLevel: "safe",
+      riskScore: 0,
+      threats: [],
+      recommendations: ["Unable to analyze - proceed with caution"],
+      summary: "Could not complete security analysis.",
+      shouldOpen: true,
+    };
+  }
+}

@@ -12,7 +12,7 @@ type Tone = "professional" | "friendly" | "brief";
 
 export function AIAssistant({ email, onUseReply }: AIAssistantProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"summary" | "reply" | "analyze">("summary");
+  const [activeTab, setActiveTab] = useState<"security" | "summary" | "reply" | "analyze">("security");
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
   const [reply, setReply] = useState<string | null>(null);
@@ -25,6 +25,14 @@ export function AIAssistant({ email, onUseReply }: AIAssistantProps) {
     actionRequired?: boolean;
     actionSummary?: string;
     actions?: string[];
+  } | null>(null);
+  const [security, setSecurity] = useState<{
+    riskLevel?: "safe" | "suspicious" | "dangerous";
+    riskScore?: number;
+    threats?: string[];
+    recommendations?: string[];
+    summary?: string;
+    shouldOpen?: boolean;
   } | null>(null);
 
   const emailContext = {
@@ -103,10 +111,51 @@ export function AIAssistant({ email, onUseReply }: AIAssistantProps) {
     }
   };
 
+  const handleSecurityScan = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/ai/security", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailContext),
+      });
+      const data = await res.json();
+      setSecurity(data);
+    } catch (error) {
+      console.error("Failed to scan:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const priorityColors = {
     high: "bg-red-100 text-red-800",
     medium: "bg-yellow-100 text-yellow-800",
     low: "bg-green-100 text-green-800",
+  };
+
+  const riskColors = {
+    safe: "bg-green-100 text-green-800 border-green-300",
+    suspicious: "bg-yellow-100 text-yellow-800 border-yellow-300",
+    dangerous: "bg-red-100 text-red-800 border-red-300",
+  };
+
+  const riskIcons = {
+    safe: (
+      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    ),
+    suspicious: (
+      <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    ),
+    dangerous: (
+      <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    ),
   };
 
   return (
@@ -133,6 +182,16 @@ export function AIAssistant({ email, onUseReply }: AIAssistantProps) {
         <div className="mt-3 bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden">
           {/* Tabs */}
           <div className="flex border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab("security")}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === "security"
+                  ? "bg-red-50 text-red-700 border-b-2 border-red-600"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Security Scan
+            </button>
             <button
               onClick={() => setActiveTab("summary")}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
@@ -167,6 +226,93 @@ export function AIAssistant({ email, onUseReply }: AIAssistantProps) {
 
           {/* Content */}
           <div className="p-4">
+            {activeTab === "security" && (
+              <div>
+                {!security ? (
+                  <div className="text-center">
+                    <div className="mb-4">
+                      <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-600 mb-4">Scan this email for phishing, scams, and other threats</p>
+                    <button
+                      onClick={handleSecurityScan}
+                      disabled={isLoading}
+                      className="w-full py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 transition-colors"
+                    >
+                      {isLoading ? "Scanning..." : "Scan for Threats"}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Risk Level Banner */}
+                    <div className={`p-4 rounded-lg border-2 ${riskColors[security.riskLevel || "safe"]}`}>
+                      <div className="flex items-center gap-3">
+                        {riskIcons[security.riskLevel || "safe"]}
+                        <div>
+                          <h4 className="font-bold text-lg capitalize">{security.riskLevel}</h4>
+                          <p className="text-sm">Risk Score: {security.riskScore}/100</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Summary */}
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <p className="text-gray-800">{security.summary}</p>
+                    </div>
+
+                    {/* Threats */}
+                    {security.threats && security.threats.length > 0 && (
+                      <div>
+                        <h5 className="font-medium text-red-700 mb-2 flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                          Threats Detected
+                        </h5>
+                        <ul className="space-y-2">
+                          {security.threats.map((threat, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-red-700 bg-red-50 p-2 rounded">
+                              <span className="text-red-500">!</span>
+                              {threat}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Recommendations */}
+                    {security.recommendations && security.recommendations.length > 0 && (
+                      <div>
+                        <h5 className="font-medium text-blue-700 mb-2 flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Recommendations
+                        </h5>
+                        <ul className="space-y-1">
+                          {security.recommendations.map((rec, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                              <span className="text-blue-500">-</span>
+                              {rec}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => setSecurity(null)}
+                      className="text-sm text-red-600 hover:underline"
+                    >
+                      Re-scan
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {activeTab === "summary" && (
               <div>
                 {!summary ? (

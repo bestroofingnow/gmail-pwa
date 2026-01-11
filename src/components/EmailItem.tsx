@@ -53,7 +53,7 @@ export function EmailItem({ email, selected }: EmailItemProps) {
           {email.subject}
         </div>
 
-        <div className="text-sm text-gray-500 truncate">
+        <div className="text-sm text-gray-900 truncate">
           {email.snippet}
         </div>
       </div>
