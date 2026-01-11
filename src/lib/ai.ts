@@ -1,12 +1,44 @@
 import { generateText } from "ai";
+import { createGroq } from "@ai-sdk/groq";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
-// Vercel AI Gateway with Google Gemini
+// Primary: Groq with Llama 4 Maverick
+const groq = createGroq({
+  apiKey: process.env.GROQ_API_KEY,
+});
+
+// Backup: Google Gemini
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_AI_API_KEY,
 });
 
-const MODEL = "gemini-2.0-flash";
+const PRIMARY_MODEL = "meta-llama/llama-4-maverick-17b-128e-instruct";
+const BACKUP_MODEL = "gemini-2.0-flash";
+
+// Helper function to run AI with fallback
+async function runWithFallback(options: {
+  system: string;
+  prompt: string;
+}): Promise<string> {
+  try {
+    // Try Groq first
+    const { text } = await generateText({
+      model: groq(PRIMARY_MODEL),
+      system: options.system,
+      prompt: options.prompt,
+    });
+    return text || "";
+  } catch (error) {
+    console.warn("Groq failed, falling back to Gemini:", error);
+    // Fall back to Gemini
+    const { text } = await generateText({
+      model: google(BACKUP_MODEL),
+      system: options.system,
+      prompt: options.prompt,
+    });
+    return text || "";
+  }
+}
 
 export interface EmailContext {
   subject: string;
@@ -17,8 +49,7 @@ export interface EmailContext {
 }
 
 export async function summarizeEmail(email: EmailContext): Promise<string> {
-  const { text } = await generateText({
-    model: google(MODEL),
+  const text = await runWithFallback({
     system: `You are an AI email assistant. Summarize emails concisely in 2-3 sentences, highlighting the key points and any action items. Be direct and professional.`,
     prompt: `Please summarize this email:
 
@@ -44,8 +75,7 @@ export async function generateReply(
     brief: "concise and to the point",
   };
 
-  const { text } = await generateText({
-    model: google(MODEL),
+  const text = await runWithFallback({
     system: `You are an AI email assistant helping to draft email replies. Write replies that are ${toneDescriptions[tone]}.
 
 Rules:
@@ -74,8 +104,7 @@ export async function categorizeEmail(email: EmailContext): Promise<{
   actionRequired: boolean;
   actionSummary?: string;
 }> {
-  const { text } = await generateText({
-    model: google(MODEL),
+  const text = await runWithFallback({
     system: `You are an AI email assistant that categorizes emails. Analyze the email and return a JSON object with:
 - category: one of "work", "personal", "newsletter", "promotional", "social", "finance", "travel", "shopping", "updates", "other"
 - priority: "high", "medium", or "low" based on urgency and importance
@@ -114,8 +143,7 @@ export async function improveEmailDraft(
   draft: string,
   instructions?: string
 ): Promise<string> {
-  const { text } = await generateText({
-    model: google(MODEL),
+  const text = await runWithFallback({
     system: `You are an AI email assistant that improves email drafts. Make the email clearer, more professional, and more effective while preserving the original intent and meaning.
 ${instructions ? `\nSpecific instructions: ${instructions}` : ""}
 
@@ -127,8 +155,7 @@ Return only the improved email text, no explanations.`,
 }
 
 export async function extractActionItems(email: EmailContext): Promise<string[]> {
-  const { text } = await generateText({
-    model: google(MODEL),
+  const text = await runWithFallback({
     system: `You are an AI email assistant that extracts action items from emails. List any tasks, requests, deadlines, or follow-ups mentioned in the email.
 
 Return a JSON array of strings, each being a specific action item. If no action items, return an empty array [].
@@ -171,8 +198,7 @@ export async function suggestMeetingTime(
   suggestedSlot: { start: string; end: string };
   reasoning: string;
 }> {
-  const { text } = await generateText({
-    model: google(MODEL),
+  const text = await runWithFallback({
     system: `You are an AI scheduling assistant. Given a meeting description, available time slots, and optional preferences, suggest the best time slot.
 
 Return a JSON object with:
@@ -214,8 +240,7 @@ Suggest the best time slot:`,
 export async function generateMeetingAgenda(
   meetingContext: CalendarContext
 ): Promise<string> {
-  const { text } = await generateText({
-    model: google(MODEL),
+  const text = await runWithFallback({
     system: `You are an AI meeting assistant. Generate a professional meeting agenda based on the meeting details provided.
 
 Include:
@@ -239,8 +264,7 @@ ${meetingContext.location ? `Location: ${meetingContext.location}` : ""}`,
 
 // Document AI Features
 export async function summarizeDocument(content: string): Promise<string> {
-  const { text } = await generateText({
-    model: google(MODEL),
+  const text = await runWithFallback({
     system: `You are an AI document assistant. Summarize the document content concisely, highlighting:
 - Main topics and themes
 - Key points and conclusions
@@ -261,8 +285,7 @@ export async function analyzeSpreadsheetData(
   sampleData: string[][],
   question: string
 ): Promise<string> {
-  const { text } = await generateText({
-    model: google(MODEL),
+  const text = await runWithFallback({
     system: `You are an AI data analyst. Analyze the spreadsheet data and answer questions about it.
 
 Provide insights based on:
@@ -296,8 +319,7 @@ export async function generateFormQuestions(
     required: boolean;
   }[];
 }> {
-  const { text } = await generateText({
-    model: google(MODEL),
+  const text = await runWithFallback({
     system: `You are an AI form builder. Generate form questions based on the topic and purpose.
 
 Return a JSON object with:
@@ -344,8 +366,7 @@ export async function analyzeFormResponses(
   insights: string[];
   recommendations: string[];
 }> {
-  const { text } = await generateText({
-    model: google(MODEL),
+  const text = await runWithFallback({
     system: `You are an AI form response analyst. Analyze the form responses and provide:
 - A summary of the responses
 - Key insights and patterns
@@ -389,8 +410,7 @@ export async function suggestFileOrganization(
   suggestedFolders: string[];
   fileAssignments: { fileName: string; suggestedFolder: string }[];
 }> {
-  const { text } = await generateText({
-    model: google(MODEL),
+  const text = await runWithFallback({
     system: `You are an AI file organization assistant. Analyze the list of files and suggest a folder structure.
 
 Return a JSON object with:
